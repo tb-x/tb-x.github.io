@@ -1,0 +1,9 @@
+# This folder is the tb-x.github.io repo, but it also holds every game (each its own repo) and private notes.
+# Only the landing page and its icons are published; everything else is ignored.
+/*
+!/.gitignore
+!/.nojekyll
+!/index.html
+!/favicon.svg
+!/favicon-32.png
+!/apple-touch-icon.png

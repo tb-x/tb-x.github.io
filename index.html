@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>tb-x Games</title>
+<meta name="description" content="Little browser games for young kids, made for phones and tablets.">
+<meta name="theme-color" content="#7ec8ff">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Games">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: a sky-blue page with a short title and a grid of big game cards (colour tile with an emoji on top,
+   name and one line below). The whole card is the link, so a child can tap anywhere on it. */
+:root {
+  --sky-top: #7ec8ff;
+  --sky-bottom: #d9f0ff;
+  --ink: #1f2a44;
+  --ink-soft: #55627f;
+  --card: #ffffff;
+  --shadow: rgba(31, 42, 68, 0.22);
+  --font-display: 'Fredoka', 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+  --font-body: Verdana, Tahoma, 'Segoe UI', system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sky-top: #16233f;
+    --sky-bottom: #0d1526;
+    --ink: #eef3ff;
+    --ink-soft: #a9b5d1;
+    --card: #1d2a47;
+    --shadow: rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --sky-top: #16233f;
+  --sky-bottom: #0d1526;
+  --ink: #eef3ff;
+  --ink-soft: #a9b5d1;
+  --card: #1d2a47;
+  --shadow: rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--sky-bottom); }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom) 60%) no-repeat;
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
+main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: calc(28px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px))
+           calc(40px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+
+header { text-align: center; margin-bottom: 28px; }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(40px, 9vw, 72px);
+  line-height: 1;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+h1 span { display: inline-block; animation: bob 2.4s ease-in-out infinite; }
+h1 span:nth-child(2) { animation-delay: 0.3s; }
+.lead { margin: 12px auto 0; max-width: 34em; font-size: 16px; line-height: 1.5; color: var(--ink-soft); }
+@keyframes bob { 50% { transform: translateY(-6px) rotate(-4deg); } }
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
+  gap: 20px;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--card);
+  border-radius: 26px;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  box-shadow: 0 6px 0 var(--shadow);
+  touch-action: manipulation;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+a.card:hover { transform: translateY(-3px); box-shadow: 0 9px 0 var(--shadow); }
+a.card:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--shadow); }
+a.card:focus-visible { outline: 4px solid var(--tone); outline-offset: 4px; }
+.card[aria-disabled="true"] { cursor: default; }
+.card[aria-disabled="true"] .tile { filter: saturate(0.35); opacity: 0.75; }
+
+.tile {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.35), transparent 55%),
+    var(--tone);
+}
+.emoji {
+  font-size: clamp(64px, 16vw, 92px);
+  line-height: 1;
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.18));
+  transition: transform 0.2s;
+}
+a.card:hover .emoji { transform: scale(1.08) rotate(-6deg); }
+.badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1f2a44;
+  font: 600 14px/1.2 var(--font-display);
+  letter-spacing: 0.04em;
+}
+.badge.soon { left: 12px; right: auto; background: #1f2a44; color: #fff; }
+
+.text { padding: 16px 20px 20px; display: grid; gap: 6px; }
+.text h2 { margin: 0; font: 700 25px/1.1 var(--font-display); }
+.text p { margin: 0; font-size: 15px; line-height: 1.45; color: var(--ink-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  h1 span { animation: none; }
+  .card, .emoji { transition: none; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1><span>Let's</span> <span>play!</span></h1>
+    <p class="lead">Little games for little hands. Made for phones and tablets, for kids around five.</p>
+  </header>
+  <ul class="grid" id="games"></ul>
+</main>
+
+<script>
+// One entry per game. dir: the folder next to this page. repo: the GitHub repo under github.com/tb-x
+// (null until it is published). lang is shown as a badge.
+const GAMES = [
+  { dir: 'wordle',            repo: 'slowka',        emoji: '🔤', tone: '#58cc02', lang: 'PL',
+    name: 'Słówka',             blurb: 'Guess a short Polish word, with a picture hint for its category.' },
+  { dir: 'math5',             repo: 'math5',         emoji: '➕', tone: '#ff9f43', lang: 'PL',
+    name: 'Matma',              blurb: 'Solve sums against the clock. Every right answer adds a part to the rocket.' },
+  { dir: 'blast-off',         repo: 'blast-off',     emoji: '🚀', tone: '#6c5ce7', lang: 'EN',
+    name: 'Blast Off Builder',  blurb: 'Build a rocket from engines, fins and noses, pick a pilot and press GO.' },
+  { dir: 'toothbrush',        repo: 'sparkle-smile', emoji: '🪥', tone: '#ff6fa8', lang: 'EN',
+    name: 'Sparkle Smile',      blurb: 'Brush the food off the teeth before the germs dig holes.' },
+  { dir: 'construction-site', repo: 'little-tower-crane', emoji: '🏗️', tone: '#ffc21a', lang: 'EN',
+    name: 'Little Tower Crane', blurb: 'Tap a block, the crane lifts it. Find where it fits and build a skyscraper.' },
+  { dir: 'heli',              repo: 'heli-rescue', emoji: '🚁', tone: '#2f9cf0', lang: 'EN',
+    name: 'Heli Rescue',        blurb: 'Fly the rescue helicopter, winch people to safety and watch your fuel.' },
+  { dir: 'robot-spy',         repo: 'robot-spy', emoji: '🤖', tone: '#ff3d9a', lang: 'EN',
+    name: 'Robot Spy',          blurb: 'Find the wanted robot hiding in a crowded neon city.' },
+];
+
+// On GitHub Pages each game is its own repo (tb-x.github.io/<repo>/); everywhere else the games sit in folders next to this page.
+const onPages = location.hostname.endsWith('github.io');
+const list = document.getElementById('games');
+
+for (const g of GAMES) {
+  const live = !onPages || g.repo;
+  const card = document.createElement(live ? 'a' : 'div');
+  card.className = 'card';
+  card.style.setProperty('--tone', g.tone);
+  if (live) card.href = onPages ? `/${g.repo}/` : `${g.dir}/index.html`;
+  else card.setAttribute('aria-disabled', 'true');
+
+  card.innerHTML = `
+    <div class="tile">
+      <span class="emoji" aria-hidden="true">${g.emoji}</span>
+      <span class="badge" title="${g.lang === 'PL' ? 'In Polish' : 'In English'}">${g.lang}</span>
+      ${live ? '' : '<span class="badge soon">Coming soon</span>'}
+    </div>
+    <div class="text">
+      <h2>${g.name}</h2>
+      <p>${g.blurb}</p>
+    </div>`;
+
+  const li = document.createElement('li');
+  li.append(card);
+  list.append(li);
+}
+</script>
+</body>
+</html>

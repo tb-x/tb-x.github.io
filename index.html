@@ -19,7 +19,7 @@
 <link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
 <style>
 /* Layout: a sky-blue page with a short title and a grid of big game cards (colour tile with an emoji on top,
-   name and one line below). The whole card is the link, so a child can tap anywhere on it. */
+   name and one line below), then a small link to the printables page. The whole card is the link, so a child can tap anywhere on it. */
 :root {
   --sky-top: #7ec8ff;
   --sky-bottom: #d9f0ff;
@@ -142,6 +142,14 @@ a.card:hover .emoji { transform: scale(1.08) rotate(-6deg); }
 .text h2 { margin: 0; font: 700 25px/1.1 var(--font-display); }
 .text p { margin: 0; font-size: 15px; line-height: 1.45; color: var(--ink-soft); }
 
+.more { text-align: center; margin: 32px 0 0; }
+.more a {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 18px; border-radius: 999px;
+  background: var(--card); color: var(--ink); text-decoration: none; font: 600 17px/1.2 var(--font-display);
+  box-shadow: 0 4px 0 var(--shadow); touch-action: manipulation;
+}
+.more a:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--shadow); }
+
 @media (prefers-reduced-motion: reduce) {
   h1 span { animation: none; }
   .card, .emoji { transition: none; }
@@ -155,6 +163,7 @@ a.card:hover .emoji { transform: scale(1.08) rotate(-6deg); }
     <p class="lead">Little games for little hands. Made for phones and tablets, for kids around five.</p>
   </header>
   <ul class="grid" id="games"></ul>
+  <p class="more"><a href="print.html"><span aria-hidden="true">🖨️</span> Printable puzzles for grown-ups to make</a></p>
 </main>
 
 <script>

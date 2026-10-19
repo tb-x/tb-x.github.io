@@ -1,4 +1,4 @@
-/* Offline support for the landing page (service worker).
+/* Offline support for the landing page and the printables page (service worker).
    Same approach as the games' sw.js: the first visit caches the page and everything it loaded, then serves it from
    the cache and refreshes it in the background when online (except the font files, which never change). This worker's scope is the whole site, so it handles
    only the landing page's own files and Google Fonts and leaves every game path to the network (each game that
@@ -6,7 +6,7 @@
    Bump CACHE only when this file's logic changes; activate deletes the landing page's older caches. */
 const PREFIX = 'landing-';
 const CACHE = PREFIX + 'v3';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'favicon.svg', 'favicon-32.png', 'apple-touch-icon.png', 'icon-512.png'];
+const SHELL = ['./', 'index.html', 'print.html', 'manifest.webmanifest', 'favicon.svg', 'favicon-32.png', 'apple-touch-icon.png', 'icon-512.png'];
 const OWN = new Set(SHELL.map((p) => new URL(p, self.registration.scope).pathname));
 const mine = (url) => {
   const u = new URL(url);

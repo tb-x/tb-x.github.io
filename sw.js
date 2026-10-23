@@ -3,9 +3,15 @@
    the cache and refreshes it in the background when online (except the font files, which never change). This worker's scope is the whole site, so it handles
    only the landing page's own files and Google Fonts and leaves every game path to the network (each game that
    works offline has its own sw.js, which takes precedence for its folder).
+   On a development server (this computer, *.localhost / *.test, or the laptop's address on the home network) it's the
+   other way round: everything comes from the server first and the cache is only the fallback when the server is
+   stopped, so an edit shows on the next reload and offline still works.
    Bump CACHE only when this file's logic changes; activate deletes the landing page's older caches. */
 const PREFIX = 'landing-';
-const CACHE = PREFIX + 'v3';
+const CACHE = PREFIX + 'v4';
+const HOST = self.location.hostname;
+const DEV = HOST === 'localhost' || HOST === '127.0.0.1' || HOST === '[::1]' || HOST.endsWith('.localhost') || HOST.endsWith('.test')
+  || /^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(HOST);
 const SHELL = ['./', 'index.html', 'print.html', 'manifest.webmanifest', 'favicon.svg', 'favicon-32.png', 'apple-touch-icon.png', 'icon-512.png'];
 const OWN = new Set(SHELL.map((p) => new URL(p, self.registration.scope).pathname));
 const mine = (url) => {
@@ -77,13 +83,14 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(caches.open(CACHE).then(async (cache) => {
     const nav = req.mode === 'navigate';
     const hit = await cache.match(req, { ignoreSearch: nav, ignoreVary: true });
-    if (hit && !nav && fixed(req.url)) return hit;   // can't have changed: no need to ask the server
+    if (hit && !nav && !DEV && fixed(req.url)) return hit;   // can't have changed: no need to ask the server
     // (the refresh always asks the server, so the browser's own cache can't hand back a stale copy: a local server
     // sends no caching rules, and a page would otherwise stay old for days)
     const net = fetch(nav ? req.url : req, { cache: 'no-cache' }).then((res) => {
       if (keep(res)) e.waitUntil(save(cache, req, res.clone()).catch(() => {}));
       return res;
     });
+    if (DEV) return net.catch(async () => hit || (nav && await cache.match('./')) || Response.error());   // dev: server first
     if (hit) { e.waitUntil(net.catch(() => {})); return hit; }   // cached: answer now, refresh in the background
     return net.catch(async () => (nav && await cache.match('./')) || Response.error());
   }));

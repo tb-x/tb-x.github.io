@@ -221,6 +221,22 @@ if ('serviceWorker' in navigator) {
     const send = () => reg.active && reg.active.postMessage({ cache: [location.href, ...performance.getEntriesByType('resource').map((r) => r.name)] });
     send(); setTimeout(send, 5000); setTimeout(send, 20000);
   }).catch(() => {});
+  // When sw.js says a newer version of this page has just been downloaded, reload once to show it: straight away if
+  // nobody has tapped or pressed a key yet, otherwise when the page comes back after 5+ minutes away, so a game in
+  // progress is never lost. A timestamp in sessionStorage stops a second reload within 30 s.
+  let started = false, newer = false, hiddenAt = 0;
+  addEventListener('pointerdown', () => { started = true; }, true);
+  addEventListener('keydown', () => { started = true; }, true);
+  const reload = () => {
+    const key = 'tbx-sw-reload:' + location.pathname;
+    try { if (Date.now() - (+sessionStorage.getItem(key) || 0) < 30000) return; sessionStorage.setItem(key, Date.now()); } catch { return; }
+    location.reload();
+  };
+  navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.updated) { newer = true; if (!started) reload(); } });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) hiddenAt = Date.now();
+    else if (newer && hiddenAt && Date.now() - hiddenAt >= 5 * 60 * 1000) reload();
+  });
 }
 </script>
 </body>

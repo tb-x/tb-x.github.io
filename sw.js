@@ -6,6 +6,8 @@
    On a development server (this computer, *.localhost / *.test, or the laptop's address on the home network) it's the
    other way round: everything comes from the server first and the cache is only the fallback when the server is
    stopped, so an edit shows on the next reload and offline still works.
+   A refreshed page that differs from the copy just shown is announced to it, and the page reloads itself once at a
+   safe moment, so an update usually shows on the launch that downloads it, not the one after.
    Bump CACHE only when this file's logic changes; activate deletes the landing page's older caches. */
 const PREFIX = 'landing-';
 const CACHE = PREFIX + 'v4';
@@ -72,6 +74,22 @@ async function storeFonts(cache) {
   }
 }
 
+// a refreshed page that differs from the copy just shown: tell that page, so it can reload itself at a safe moment and
+// show the update on this launch instead of the next one (said twice, in case it wasn't listening yet)
+async function announce(old, fresh, url) {
+  if ((await old.text()) === (await fresh.text())) return;
+  const u = new URL(url);
+  const tell = async () => {
+    for (const c of await self.clients.matchAll({ type: 'window', includeUncontrolled: true })) {
+      const w = new URL(c.url);
+      if (w.origin === u.origin && w.pathname === u.pathname) c.postMessage({ updated: true });
+    }
+  };
+  await tell();
+  await new Promise((r) => setTimeout(r, 1500));
+  await tell();
+}
+
 self.addEventListener('message', (e) => {   // { cache: [urls] } from the page: everything it loaded
   const urls = e.data && Array.isArray(e.data.cache) ? e.data.cache.filter(mine) : [];
   if (urls.length) e.waitUntil(caches.open(CACHE).then((c) => Promise.all(urls.map((u) => store(c, u))).then(() => storeFonts(c))));
@@ -82,12 +100,17 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET' || !req.url.startsWith('http') || !mine(req.url)) return;
   e.respondWith(caches.open(CACHE).then(async (cache) => {
     const nav = req.mode === 'navigate';
-    const hit = await cache.match(req, { ignoreSearch: nav, ignoreVary: true });
+    const key = nav ? req.url.split(/[?#]/)[0] : req;   // a page is the same file whatever its query: keep one copy
+    const hit = await cache.match(key, { ignoreVary: true }) || (nav && await cache.match(req, { ignoreSearch: true, ignoreVary: true })) || undefined;
     if (hit && !nav && !DEV && fixed(req.url)) return hit;   // can't have changed: no need to ask the server
+    const old = nav && hit && !DEV && hit.clone();   // the copy about to be shown, to compare with the refreshed one
     // (the refresh always asks the server, so the browser's own cache can't hand back a stale copy: a local server
     // sends no caching rules, and a page would otherwise stay old for days)
     const net = fetch(nav ? req.url : req, { cache: 'no-cache' }).then((res) => {
-      if (keep(res)) e.waitUntil(save(cache, req, res.clone()).catch(() => {}));
+      if (keep(res)) {
+        const copy = res.clone(), fresh = old && res.clone();
+        e.waitUntil(save(cache, key, copy).then(() => fresh && announce(old, fresh, req.url)).catch(() => {}));
+      }
       return res;
     });
     if (DEV) return net.catch(async () => hit || (nav && await cache.match('./')) || Response.error());   // dev: server first
